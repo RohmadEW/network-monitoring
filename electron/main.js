@@ -370,10 +370,9 @@ function sendToRenderer(channel, data) {
 // ============================================================================
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 700,
+    width: 700,
+    height: 1000,
+    resizable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
