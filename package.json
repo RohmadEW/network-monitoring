@@ -2,13 +2,56 @@
   "name": "network-monitoring",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "electron:dev": "concurrently -k \"next dev\" \"wait-on http://localhost:3000 && electron . --no-sandbox\"",
+    "electron:build": "pnpm build && electron-builder --linux",
+    "electron:build:deb": "pnpm build && electron-builder --linux deb",
+    "electron:build:appimage": "pnpm build && electron-builder --linux AppImage",
+    "electron:build:rpm": "pnpm build && electron-builder --linux rpm"
+  },
+  "build": {
+    "appId": "com.network.monitoring",
+    "productName": "Network Monitoring",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "out/**/*"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network",
+      "icon": "electron/icons",
+      "maintainer": "Network Monitoring Team"
+    },
+    "deb": {
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1"
+      ]
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}.${ext}"
+    }
   },
   "dependencies": {
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
     "next": "16.0.8",
     "react": "19.2.1",
     "react-dom": "19.2.1"
@@ -18,9 +61,13 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
     "eslint": "^9",
     "eslint-config-next": "16.0.8",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.3"
   }
 }
