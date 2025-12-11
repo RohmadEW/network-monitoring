@@ -21,6 +21,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSpeedtestStats: (minutes) => ipcRenderer.invoke('get-speedtest-stats', minutes),
   getRecentPings: (count) => ipcRenderer.invoke('get-recent-pings', count),
 
+  // History for charts
+  getPingHistory: (minutes, intervalSec) => ipcRenderer.invoke('get-ping-history', minutes, intervalSec),
+  getSpeedtestHistory: (minutes) => ipcRenderer.invoke('get-speedtest-history', minutes),
+  getGapHistory: (minutes, groupBy) => ipcRenderer.invoke('get-gap-history', minutes, groupBy),
+
   // Event listeners
   onPingResult: (callback) => {
     const listener = (event, data) => callback(data);
