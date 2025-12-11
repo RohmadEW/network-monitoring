@@ -67,8 +67,8 @@ export default function Home() {
   const [pingRunning, setPingRunning] = useState(false);
   const [pingStats, setPingStats] = useState<PingStats>({ avg: "--", med: "--", std: "--", min: "--", max: "--", count: 0 });
   const [packetLoss, setPacketLoss] = useState<PacketLoss>({ percent: "0", lost: 0, total: 0 });
-  const [gapStats, setGapStats] = useState<GapStats>({ count: 0, totalSec: 0, avg: "0", min: 0, max: 0 });
-  const [speedtestStats, setSpeedtestStats] = useState<SpeedtestStats>({ download: "--", upload: "--", latency: "--", count: 0 });
+  const [gapStats, setGapStats] = useState<GapStats>({ count: 0, totalSec: 0, avg: "0", min: 0, max: 0, med: "0", std: "0" });
+  const [speedtestStats, setSpeedtestStats] = useState<SpeedtestStats>({ download: "--", upload: "--", latency: "--", count: 0, downloadMin: "--", downloadMax: "--", downloadMed: "--", downloadStd: "--", uploadMin: "--", uploadMax: "--", uploadMed: "--", uploadStd: "--" });
   const [speedtestRunning, setSpeedtestRunning] = useState(false);
   const [lastSpeedtest, setLastSpeedtest] = useState<SpeedtestResult | null>(null);
   const [alert, setAlert] = useState<{ type: "timeout" | "loss" | "speedtest"; message: string } | null>(null);
@@ -93,6 +93,8 @@ export default function Home() {
       setSpeedtestStats(await window.electronAPI.getSpeedtestStats(1440));
       const status = await window.electronAPI.pingStatus();
       setPingRunning(status.running);
+      const last = await window.electronAPI.getLastSpeedtest();
+      if (last) setLastSpeedtest(last);
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
@@ -229,11 +231,12 @@ export default function Home() {
               <span className="text-xs font-bold uppercase tracking-widest text-cyan-400">PING</span>
               <span className={`w-2 h-2 rounded-full ${pingRunning ? "bg-cyan-400 animate-pulse" : "bg-slate-500"}`} />
             </div>
-            <div className="flex items-baseline gap-1 mb-3">
+            <div className="flex items-baseline gap-2 mb-3">
               <span className="text-3xl font-black text-white">{pingStats.avg}</span>
               <span className="text-sm text-slate-400">ms avg</span>
+              <span className="text-amber-400 font-semibold text-sm">±{pingStats.std}</span>
             </div>
-            <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center justify-between text-xs">
               <div>
                 <span className="text-slate-500">min</span>
                 <span className="text-emerald-400 font-semibold ml-1">{pingStats.min}</span>
@@ -246,10 +249,6 @@ export default function Home() {
                 <span className="text-slate-500">med</span>
                 <span className="text-cyan-400 font-semibold ml-1">{pingStats.med}</span>
               </div>
-              <div>
-                <span className="text-slate-500">std</span>
-                <span className="text-amber-400 font-semibold ml-1">±{pingStats.std}</span>
-              </div>
             </div>
             <div className="text-[10px] text-slate-600 mt-2">{pingStats.count.toLocaleString()} samples</div>
           </div>
@@ -260,32 +259,30 @@ export default function Home() {
               <span className="text-xs font-bold uppercase tracking-widest text-amber-400">GAPS</span>
               <span className={`w-2 h-2 rounded-full ${hasGapsToday ? "bg-amber-400 animate-pulse" : "bg-emerald-400"}`} />
             </div>
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-baseline gap-1">
-                <span className={`text-3xl font-black ${hasGapsToday ? "text-amber-400" : "text-emerald-400"}`}>{gapStats.count}</span>
-                <span className="text-sm text-slate-400">timeouts</span>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm text-slate-400">total</span>
-                <span className={`text-3xl font-black ${hasGapsToday ? "text-amber-400" : "text-emerald-400"}`}>{gapStats.totalSec}</span>
-                <span className="text-sm text-slate-400">s</span>
-              </div>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className={`text-3xl font-black ${hasGapsToday ? "text-amber-400" : "text-emerald-400"}`}>{gapStats.avg}</span>
+              <span className="text-sm text-slate-400">s avg</span>
+              <span className="text-cyan-400 font-semibold text-sm">±{gapStats.std}</span>
             </div>
-            <div className="flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center justify-between text-xs">
               <div>
                 <span className="text-slate-500">min</span>
-                <span className="text-emerald-400 font-semibold ml-1">{gapStats.min}s</span>
-              </div>
-              <div>
-                <span className="text-slate-500">avg</span>
-                <span className="text-amber-400 font-semibold ml-1">{gapStats.avg}s</span>
+                <span className="text-emerald-400 font-semibold ml-1">{gapStats.min}</span>
               </div>
               <div>
                 <span className="text-slate-500">max</span>
-                <span className="text-rose-400 font-semibold ml-1">{gapStats.max}s</span>
+                <span className="text-rose-400 font-semibold ml-1">{gapStats.max}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">med</span>
+                <span className="text-amber-400 font-semibold ml-1">{gapStats.med}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">tot</span>
+                <span className="text-rose-400 font-semibold ml-1">{gapStats.totalSec}s</span>
               </div>
             </div>
-            <div className="text-[10px] text-slate-600 mt-2">today (&gt;2s threshold)</div>
+            <div className="text-[10px] text-slate-600 mt-2">{gapStats.count} timeouts today</div>
           </div>
 
           {/* Packet Loss Stats Card */}
@@ -321,27 +318,26 @@ export default function Home() {
               <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">SPEED</span>
               <span className={`w-2 h-2 rounded-full ${speedtestRunning ? "bg-cyan-400 animate-pulse" : "bg-emerald-400"}`} />
             </div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-emerald-400">{speedtestStats.download}</span>
-                <span className="text-[10px] text-slate-500">↓</span>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-blue-400">{speedtestStats.upload}</span>
-                <span className="text-[10px] text-slate-500">↑</span>
-              </div>
+            <div className="flex items-baseline gap-2 mb-3">
+              <span className="text-3xl font-black text-emerald-400">{lastSpeedtest?.download ? Number(lastSpeedtest.download).toFixed(1) : "--"}</span>
+              <span className="text-[10px] text-slate-500">↓</span>
+              <span className="text-3xl font-black text-blue-400">{lastSpeedtest?.upload ? Number(lastSpeedtest.upload).toFixed(1) : "--"}</span>
+              <span className="text-[10px] text-slate-500">↑</span>
+              <span className="text-sm text-slate-400">Mbps</span>
             </div>
-            <div className="flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center justify-between text-xs mb-1">
               <div>
-                <span className="text-slate-500">down</span>
-                <span className="text-emerald-400 font-semibold ml-1">{speedtestStats.download} Mbps</span>
+                <span className="text-slate-500">↓avg</span>
+                <span className="text-emerald-400 font-semibold ml-1">{speedtestStats.download}</span>
+                <span className="text-amber-400 font-semibold ml-1">±{speedtestStats.downloadStd}</span>
               </div>
               <div>
-                <span className="text-slate-500">ping</span>
-                <span className="text-amber-400 font-semibold ml-1">{speedtestStats.latency} ms</span>
+                <span className="text-slate-500">↑avg</span>
+                <span className="text-blue-400 font-semibold ml-1">{speedtestStats.upload}</span>
+                <span className="text-amber-400 font-semibold ml-1">±{speedtestStats.uploadStd}</span>
               </div>
             </div>
-            <div className="text-[10px] text-slate-600 mt-2">{speedtestStats.count} tests avg</div>
+            <div className="text-[10px] text-slate-600">{speedtestStats.count} tests • ping {speedtestStats.latency}ms</div>
           </div>
         </div>
 

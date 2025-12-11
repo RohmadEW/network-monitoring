@@ -260,12 +260,40 @@ function getGapStats() {
   `);
   const row = stmt.get();
 
+  if (!row || row.count === 0) {
+    return { count: 0, totalSec: 0, avg: '0', min: 0, max: 0, med: '0', std: '0' };
+  }
+
+  // Calculate median
+  const medianStmt = getDb().prepare(`
+    SELECT gap_seconds FROM gaps
+    WHERE timestamp >= datetime('now', 'localtime', 'start of day')
+    ORDER BY gap_seconds
+    LIMIT 1 OFFSET (
+      SELECT COUNT(*) / 2 FROM gaps
+      WHERE timestamp >= datetime('now', 'localtime', 'start of day')
+    )
+  `);
+  const medianRow = medianStmt.get();
+  const median = medianRow ? medianRow.gap_seconds : row.avg;
+
+  // Calculate standard deviation
+  const stdStmt = getDb().prepare(`
+    SELECT AVG((gap_seconds - ?) * (gap_seconds - ?)) as variance
+    FROM gaps
+    WHERE timestamp >= datetime('now', 'localtime', 'start of day')
+  `);
+  const stdRow = stdStmt.get(row.avg, row.avg);
+  const std = stdRow && stdRow.variance ? Math.sqrt(stdRow.variance) : 0;
+
   return {
     count: row.count || 0,
     totalSec: row.total_sec || 0,
     avg: row.avg ? row.avg.toFixed(1) : '0',
     min: row.min || 0,
-    max: row.max || 0
+    max: row.max || 0,
+    med: median ? median.toFixed(1) : '0',
+    std: std.toFixed(1)
   };
 }
 
@@ -306,6 +334,10 @@ function getSpeedtestStats(minutes) {
       AVG(download_mbps) as download,
       AVG(upload_mbps) as upload,
       AVG(latency_ms) as latency,
+      MIN(download_mbps) as download_min,
+      MAX(download_mbps) as download_max,
+      MIN(upload_mbps) as upload_min,
+      MAX(upload_mbps) as upload_max,
       COUNT(*) as count
     FROM speedtests
     WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
@@ -314,14 +346,76 @@ function getSpeedtestStats(minutes) {
   const row = stmt.get(minutes);
 
   if (!row || row.count === 0) {
-    return { download: 'N/A', upload: 'N/A', latency: 'N/A', count: 0 };
+    return {
+      download: 'N/A', upload: 'N/A', latency: 'N/A', count: 0,
+      downloadMin: 'N/A', downloadMax: 'N/A', downloadMed: 'N/A', downloadStd: 'N/A',
+      uploadMin: 'N/A', uploadMax: 'N/A', uploadMed: 'N/A', uploadStd: 'N/A'
+    };
   }
+
+  // Calculate download median
+  const dlMedianStmt = getDb().prepare(`
+    SELECT download_mbps FROM speedtests
+    WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
+      AND download_mbps IS NOT NULL
+    ORDER BY download_mbps
+    LIMIT 1 OFFSET (
+      SELECT COUNT(*) / 2 FROM speedtests
+      WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
+        AND download_mbps IS NOT NULL
+    )
+  `);
+  const dlMedianRow = dlMedianStmt.get(minutes, minutes);
+  const downloadMedian = dlMedianRow ? dlMedianRow.download_mbps : row.download;
+
+  // Calculate upload median
+  const ulMedianStmt = getDb().prepare(`
+    SELECT upload_mbps FROM speedtests
+    WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
+      AND upload_mbps IS NOT NULL
+    ORDER BY upload_mbps
+    LIMIT 1 OFFSET (
+      SELECT COUNT(*) / 2 FROM speedtests
+      WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
+        AND upload_mbps IS NOT NULL
+    )
+  `);
+  const ulMedianRow = ulMedianStmt.get(minutes, minutes);
+  const uploadMedian = ulMedianRow ? ulMedianRow.upload_mbps : row.upload;
+
+  // Calculate download standard deviation
+  const dlStdStmt = getDb().prepare(`
+    SELECT AVG((download_mbps - ?) * (download_mbps - ?)) as variance
+    FROM speedtests
+    WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
+      AND download_mbps IS NOT NULL
+  `);
+  const dlStdRow = dlStdStmt.get(row.download, row.download, minutes);
+  const downloadStd = dlStdRow && dlStdRow.variance ? Math.sqrt(dlStdRow.variance) : 0;
+
+  // Calculate upload standard deviation
+  const ulStdStmt = getDb().prepare(`
+    SELECT AVG((upload_mbps - ?) * (upload_mbps - ?)) as variance
+    FROM speedtests
+    WHERE timestamp >= datetime('now', 'localtime', '-' || ? || ' minutes')
+      AND upload_mbps IS NOT NULL
+  `);
+  const ulStdRow = ulStdStmt.get(row.upload, row.upload, minutes);
+  const uploadStd = ulStdRow && ulStdRow.variance ? Math.sqrt(ulStdRow.variance) : 0;
 
   return {
     download: row.download ? row.download.toFixed(1) : 'N/A',
     upload: row.upload ? row.upload.toFixed(1) : 'N/A',
     latency: row.latency ? row.latency.toFixed(1) : 'N/A',
-    count: row.count
+    count: row.count,
+    downloadMin: row.download_min ? row.download_min.toFixed(1) : 'N/A',
+    downloadMax: row.download_max ? row.download_max.toFixed(1) : 'N/A',
+    downloadMed: downloadMedian ? downloadMedian.toFixed(1) : 'N/A',
+    downloadStd: downloadStd.toFixed(1),
+    uploadMin: row.upload_min ? row.upload_min.toFixed(1) : 'N/A',
+    uploadMax: row.upload_max ? row.upload_max.toFixed(1) : 'N/A',
+    uploadMed: uploadMedian ? uploadMedian.toFixed(1) : 'N/A',
+    uploadStd: uploadStd.toFixed(1)
   };
 }
 

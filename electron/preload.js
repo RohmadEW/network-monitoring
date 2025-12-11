@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPingHistory: (minutes, intervalSec) => ipcRenderer.invoke('get-ping-history', minutes, intervalSec),
   getSpeedtestHistory: (minutes) => ipcRenderer.invoke('get-speedtest-history', minutes),
   getGapHistory: (minutes, groupBy) => ipcRenderer.invoke('get-gap-history', minutes, groupBy),
+  getLastSpeedtest: () => ipcRenderer.invoke('get-last-speedtest'),
 
   // Event listeners
   onPingResult: (callback) => {

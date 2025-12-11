@@ -27,6 +27,8 @@ export interface GapStats {
   avg: string;
   min: number;
   max: number;
+  med: string;
+  std: string;
 }
 
 // History types for charts
@@ -70,6 +72,14 @@ export interface SpeedtestStats {
   upload: string;
   latency: string;
   count: number;
+  downloadMin: string;
+  downloadMax: string;
+  downloadMed: string;
+  downloadStd: string;
+  uploadMin: string;
+  uploadMax: string;
+  uploadMed: string;
+  uploadStd: string;
 }
 
 export interface SpeedtestStatusEvent {
@@ -110,6 +120,7 @@ export interface ElectronAPI {
   getPingHistory: (minutes: number, intervalSec: number) => Promise<PingHistoryPoint[]>;
   getSpeedtestHistory: (minutes: number) => Promise<SpeedtestHistoryPoint[]>;
   getGapHistory: (minutes: number, groupBy: string) => Promise<GapHistoryPoint[]>;
+  getLastSpeedtest: () => Promise<SpeedtestResult | null>;
 
   // Event listeners (return cleanup function)
   onPingResult: (callback: (data: PingResult) => void) => () => void;

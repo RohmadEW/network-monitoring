@@ -286,6 +286,10 @@ ipcMain.handle('get-gap-history', (event, minutes, groupBy) => {
   return db.getGapHistory(minutes, groupBy);
 });
 
+ipcMain.handle('get-last-speedtest', () => {
+  return db.getLastSpeedtest();
+});
+
 ipcMain.handle('get-app-info', () => {
   return {
     version: app.getVersion(),
