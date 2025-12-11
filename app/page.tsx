@@ -219,133 +219,129 @@ export default function Home() {
         </div>
       )}
 
-      <main className="relative h-full flex flex-col p-5 gap-4 overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Network Monitor</h1>
-            <p className="text-sm text-slate-400">Real-time network telemetry • Target: google.com</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="text-xs text-slate-500">Session Uptime</p>
-              <p className="text-lg font-mono text-cyan-400">{formatUptime(uptime)}</p>
-            </div>
-            <div className={`px-4 py-2 rounded-xl text-sm font-bold ${healthStatus.bg} ${healthStatus.border} border ${healthStatus.color}`}>
-              {healthStatus.label}
-            </div>
-          </div>
-        </header>
+      <main className="relative h-full flex flex-col p-4 gap-3 overflow-hidden">
 
         {/* Status Cards - 4 columns with detailed stats */}
         <div className="grid grid-cols-4 gap-3 shrink-0">
           {/* Ping Stats Card */}
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-cyan-500/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-cyan-400">PING</span>
               <span className={`w-2 h-2 rounded-full ${pingRunning ? "bg-cyan-400 animate-pulse" : "bg-slate-500"}`} />
-              <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">Ping Latency</span>
             </div>
-            <div className="grid grid-cols-5 gap-1 text-[10px]">
-              <div className="text-center">
-                <p className="text-slate-500">MIN</p>
-                <p className="text-emerald-400 font-bold">{pingStats.min}</p>
+            <div className="flex items-baseline gap-1 mb-3">
+              <span className="text-3xl font-black text-white">{pingStats.avg}</span>
+              <span className="text-sm text-slate-400">ms avg</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <div>
+                <span className="text-slate-500">min</span>
+                <span className="text-emerald-400 font-semibold ml-1">{pingStats.min}</span>
               </div>
-              <div className="text-center">
-                <p className="text-slate-500">AVG</p>
-                <p className="text-cyan-400 font-bold">{pingStats.avg}</p>
+              <div>
+                <span className="text-slate-500">max</span>
+                <span className="text-rose-400 font-semibold ml-1">{pingStats.max}</span>
               </div>
-              <div className="text-center">
-                <p className="text-slate-500">MED</p>
-                <p className="text-cyan-400 font-bold">{pingStats.med}</p>
+              <div>
+                <span className="text-slate-500">med</span>
+                <span className="text-cyan-400 font-semibold ml-1">{pingStats.med}</span>
               </div>
-              <div className="text-center">
-                <p className="text-slate-500">MAX</p>
-                <p className="text-rose-400 font-bold">{pingStats.max}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-slate-500">STD</p>
-                <p className="text-amber-400 font-bold">{pingStats.std}</p>
+              <div>
+                <span className="text-slate-500">std</span>
+                <span className="text-amber-400 font-semibold ml-1">±{pingStats.std}</span>
               </div>
             </div>
-            <p className="text-[9px] text-slate-500 mt-1 text-center">{pingStats.count} samples (24h)</p>
+            <div className="text-[10px] text-slate-600 mt-2">{pingStats.count.toLocaleString()} samples</div>
           </div>
 
           {/* Gap/Timeout Stats Card */}
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-amber-500/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-400">GAPS</span>
               <span className={`w-2 h-2 rounded-full ${hasGapsToday ? "bg-amber-400 animate-pulse" : "bg-emerald-400"}`} />
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">Network Gaps</span>
             </div>
-            <div className="grid grid-cols-5 gap-1 text-[10px]">
-              <div className="text-center">
-                <p className="text-slate-500">MIN</p>
-                <p className="text-emerald-400 font-bold">{gapStats.min}s</p>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-baseline gap-1">
+                <span className={`text-3xl font-black ${hasGapsToday ? "text-amber-400" : "text-emerald-400"}`}>{gapStats.count}</span>
+                <span className="text-sm text-slate-400">timeouts</span>
               </div>
-              <div className="text-center">
-                <p className="text-slate-500">AVG</p>
-                <p className="text-amber-400 font-bold">{gapStats.avg}s</p>
-              </div>
-              <div className="text-center">
-                <p className="text-slate-500">MAX</p>
-                <p className="text-rose-400 font-bold">{gapStats.max}s</p>
-              </div>
-              <div className="text-center">
-                <p className="text-slate-500">COUNT</p>
-                <p className="text-white font-bold">{gapStats.count}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-slate-500">TOTAL</p>
-                <p className="text-rose-400 font-bold">{gapStats.totalSec}s</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm text-slate-400">total</span>
+                <span className={`text-3xl font-black ${hasGapsToday ? "text-amber-400" : "text-emerald-400"}`}>{gapStats.totalSec}</span>
+                <span className="text-sm text-slate-400">s</span>
               </div>
             </div>
-            <p className="text-[9px] text-slate-500 mt-1 text-center">Today&apos;s timeouts (&gt;2s)</p>
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <div>
+                <span className="text-slate-500">min</span>
+                <span className="text-emerald-400 font-semibold ml-1">{gapStats.min}s</span>
+              </div>
+              <div>
+                <span className="text-slate-500">avg</span>
+                <span className="text-amber-400 font-semibold ml-1">{gapStats.avg}s</span>
+              </div>
+              <div>
+                <span className="text-slate-500">max</span>
+                <span className="text-rose-400 font-semibold ml-1">{gapStats.max}s</span>
+              </div>
+            </div>
+            <div className="text-[10px] text-slate-600 mt-2">today (&gt;2s threshold)</div>
           </div>
 
           {/* Packet Loss Stats Card */}
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-rose-500/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-rose-400">LOSS</span>
               <span className={`w-2 h-2 rounded-full ${packetLoss.lost > 0 ? "bg-rose-400 animate-pulse" : "bg-emerald-400"}`} />
-              <span className="text-xs font-semibold uppercase tracking-wider text-rose-400">Packet Loss</span>
             </div>
-            <div className="flex items-center justify-center gap-4">
-              <div className="text-center">
-                <p className={`text-3xl font-bold ${packetLoss.lost > 0 ? "text-rose-400" : "text-emerald-400"}`}>
-                  {packetLoss.percent}<span className="text-lg">%</span>
-                </p>
-                <p className="text-[10px] text-slate-500">loss rate</p>
+            <div className="flex items-baseline gap-1 mb-3">
+              <span className={`text-3xl font-black ${packetLoss.lost > 0 ? "text-rose-400" : "text-emerald-400"}`}>{packetLoss.percent}</span>
+              <span className="text-xl text-slate-400">%</span>
+            </div>
+            <div className="flex items-center justify-between gap-4 text-xs">
+              <div>
+                <span className="text-slate-500">lost</span>
+                <span className="text-rose-400 font-semibold ml-1">{packetLoss.lost}</span>
               </div>
-              <div className="text-[10px] text-left">
-                <p><span className="text-slate-500">Lost:</span> <span className="text-rose-400 font-bold">{packetLoss.lost}</span></p>
-                <p><span className="text-slate-500">Total:</span> <span className="text-white font-bold">{packetLoss.total}</span></p>
+              <div>
+                <span className="text-slate-500">total</span>
+                <span className="text-white font-semibold ml-1">{packetLoss.total}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">recv</span>
+                <span className="text-emerald-400 font-semibold ml-1">{packetLoss.total - packetLoss.lost}</span>
               </div>
             </div>
-            <p className="text-[9px] text-slate-500 mt-1 text-center">Today&apos;s packet statistics</p>
+            <div className="text-[10px] text-slate-600 mt-2">today&apos;s packets</div>
           </div>
 
           {/* Speedtest Stats Card */}
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-emerald-500/20 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">SPEED</span>
               <span className={`w-2 h-2 rounded-full ${speedtestRunning ? "bg-cyan-400 animate-pulse" : "bg-emerald-400"}`} />
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Speedtest</span>
             </div>
-            <div className="grid grid-cols-3 gap-1 text-[10px]">
-              <div className="text-center">
-                <p className="text-slate-500">DOWNLOAD</p>
-                <p className="text-emerald-400 font-bold text-sm">{speedtestStats.download}</p>
-                <p className="text-slate-500 text-[8px]">Mbps</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-emerald-400">{speedtestStats.download}</span>
+                <span className="text-[10px] text-slate-500">↓</span>
               </div>
-              <div className="text-center">
-                <p className="text-slate-500">UPLOAD</p>
-                <p className="text-blue-400 font-bold text-sm">{speedtestStats.upload}</p>
-                <p className="text-slate-500 text-[8px]">Mbps</p>
-              </div>
-              <div className="text-center">
-                <p className="text-slate-500">LATENCY</p>
-                <p className="text-amber-400 font-bold text-sm">{speedtestStats.latency}</p>
-                <p className="text-slate-500 text-[8px]">ms</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-blue-400">{speedtestStats.upload}</span>
+                <span className="text-[10px] text-slate-500">↑</span>
               </div>
             </div>
-            <p className="text-[9px] text-slate-500 mt-1 text-center">{speedtestStats.count} tests (24h avg)</p>
+            <div className="flex items-center justify-between gap-4 text-xs">
+              <div>
+                <span className="text-slate-500">down</span>
+                <span className="text-emerald-400 font-semibold ml-1">{speedtestStats.download} Mbps</span>
+              </div>
+              <div>
+                <span className="text-slate-500">ping</span>
+                <span className="text-amber-400 font-semibold ml-1">{speedtestStats.latency} ms</span>
+              </div>
+            </div>
+            <div className="text-[10px] text-slate-600 mt-2">{speedtestStats.count} tests avg</div>
           </div>
         </div>
 
@@ -521,29 +517,37 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Footer with Network Quality */}
+        {/* Footer with Uptime, Health Status, and Info */}
         <footer className="flex items-center justify-between text-[10px] text-slate-500 shrink-0 bg-slate-800/30 rounded-xl px-4 py-2">
           <div className="flex items-center gap-4">
-            <span>Auto speedtest every 15 min</span>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Uptime:</span>
+              <span className="text-cyan-400 font-bold text-xs">{formatUptime(uptime)}</span>
+            </div>
+            <span className="text-slate-600">|</span>
+            <span>Speedtest: 15 min</span>
             <span>•</span>
-            <span>Data retention: 7 days</span>
+            <span>Retention: 7 days</span>
             {lastSpeedtest && (
               <>
                 <span>•</span>
-                <span>Last test: {lastSpeedtest.server} @ {lastSpeedtest.timestamp?.split(' ')[1]}</span>
+                <span>Last: {lastSpeedtest.server?.split(' ')[0]} @ {lastSpeedtest.timestamp?.split(' ')[1]}</span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-slate-400">Network Quality:</span>
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-24 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+              <span className="text-slate-400">Quality:</span>
+              <div className="w-20 h-1.5 bg-slate-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 transition-all duration-500"
                   style={{ width: `${healthStatus.score}%` }}
                 />
               </div>
               <span className={`text-xs font-bold ${healthStatus.color}`}>{healthStatus.score}%</span>
+            </div>
+            <div className={`px-3 py-1 rounded-lg text-[10px] font-bold ${healthStatus.bg} ${healthStatus.border} border ${healthStatus.color}`}>
+              {healthStatus.label}
             </div>
           </div>
         </footer>
